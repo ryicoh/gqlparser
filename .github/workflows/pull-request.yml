@@ -85,16 +85,16 @@ jobs:
         with:
           ref: master
       - name: Run benchmark (master branch)
-        run: go test -bench=. | tee old.txt
+        run: go test -bench . | tee /tmp/old.txt
 
       - name: Checkout
         uses: actions/checkout@v3
       - name: Run benchmark
-        run: go test -bench=. | tee new.txt
+        run: go test -bench . | tee /tmp/new.txt
 
       - name: Run benchstat
         run: |
-          benchstat old.txt new.txt | tee bench_result.txt
+          benchstat /tmp/old.txt /tmp/new.txt | tee bench_result.txt
           body="$(cat bench_result.txt)"
           body="${body//'%'/'%25'}"
           body="${body//$'\n'/'%0A'}"
@@ -107,5 +107,10 @@ jobs:
         uses: peter-evans/create-or-update-comment@a35cf36e5301d70b76f316e867e7788a55a31dae
         with:
           issue-number: ${{ github.event.pull_request.number }}
-          body: ${{ steps.get-comment-body.outputs.body }}
+          token: ${{ secrets.PAT }}
+          body: |
+            @${{ github.event.pull_request.user.login }}
+            ```
+            ${{ steps.get-comment-body.outputs.body }}
+            ```
 
